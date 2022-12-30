@@ -42,18 +42,45 @@ Shader "CG/Bricks"
                 struct v2f
                 {
                     float4 pos : SV_POSITION;
+                    float3 normal   : NORMAL;
+                    float4 tangent  : TANGENT;
+                    float2 uv  : TEXCOORD0;
+                    float4 worldPos: TEXCOORD1;
                 };
 
                 v2f vert (appdata input)
                 {
                     v2f output;
                     output.pos = UnityObjectToClipPos(input.vertex);
+                    output.normal = normalize(mul(input.normal, unity_WorldToObject).xyz);
+                    output.worldPos = mul(input.vertex, unity_WorldToObject);
+                    output.tangent = mul(input.tangent, unity_WorldToObject);
+                   // output.tangent = input.tangent;
+                    output.uv = input.uv;
                     return output;
                 }
 
                 fixed4 frag (v2f input) : SV_Target
                 {
-                    return 1;
+                    
+                    float3 normalDirection = normalize(input.normal);
+                    bumpMapData bumpMesh;
+                    bumpMesh.normal = normalDirection;
+                    bumpMesh.tangent = input.tangent; 
+                    bumpMesh.uv = input.uv;
+                    bumpMesh.heightMap = _HeightMap;
+                    bumpMesh.du = _HeightMap_TexelSize.x;
+                    bumpMesh.dv = _HeightMap_TexelSize.y;
+                    bumpMesh.bumpScale = _BumpScale/10000;
+                    float3 n = getBumpMappedNormal(bumpMesh);
+                    float3 l = normalize(_WorldSpaceLightPos0.xyz);
+                    float3 v = normalize(_WorldSpaceCameraPos - input.worldPos.xyz);
+                    float3 h = normalize(l + v);
+                    fixed4 albedo = tex2D(_AlbedoMap, input.uv);
+                    fixed4 spectular = tex2D(_SpecularMap, input.uv);
+                    fixed4 blinnP = fixed4(blinnPhong(n,h,l,_Shininess,albedo,spectular,_Ambient), 0);
+                    return blinnP;
+;
                 }
 
             ENDCG
