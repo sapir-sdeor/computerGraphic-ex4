@@ -28,3 +28,4 @@ Material:
     - _NoiseScale: 10
     - _TimeScale: 3
     m_Colors: []
+  m_BuildTextureStacks: []

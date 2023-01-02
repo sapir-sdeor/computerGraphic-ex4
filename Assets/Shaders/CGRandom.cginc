@@ -57,8 +57,14 @@ float bicubicInterpolation(float v[4], float2 t)
 // at the given ratio t (a float2 with components between 0 and 1)
 float biquinticInterpolation(float v[4], float2 t)
 {
-    // Your implementation
-    return 0;
+    float2 u = 6.0 * pow(t,5) - 15.0 * pow(t,4) + 10.0 * pow(t,3); // Cubic interpolation
+
+    // Interpolate in the x direction
+    float x1 = lerp(v[0], v[1], u.x);
+    float x2 = lerp(v[2], v[3], u.x);
+
+    // Interpolate in the y direction and return
+    return lerp(x1, x2, u.y);
 }
 
 // Interpolates a given array v of 8 float values using triquintic interpolation
@@ -72,15 +78,27 @@ float triquinticInterpolation(float v[8], float3 t)
 // Returns the value of a 2D value noise function at the given coordinates c
 float value2d(float2 c)
 {
-    // Your implementation
-    return 0;
+    float p0 = random2(float2(floor(c.x), floor(c.y))).x;
+    float p1 = random2(float2(ceil(c.x), floor(c.y))).x;
+    float p2 = random2(float2(floor(c.x), ceil(c.y))).x;
+    float p3 = random2(float2(ceil(c.x), ceil(c.y))).x;
+    float v[4] = {p0,p1,p2,p3};
+    return bicubicInterpolation(v, float2(c.x - floor(c.x), c.y - floor(c.y)));
 }
 
 // Returns the value of a 2D Perlin noise function at the given coordinates c
 float perlin2d(float2 c)
 {
-    // Your implementation
-    return 0;
+    float2 g0 = random2(float2(floor(c.x), floor(c.y)));
+    float2 g1 = random2(float2(ceil(c.x), floor(c.y)));
+    float2 g2 = random2(float2(floor(c.x), ceil(c.y)));
+    float2 g3 = random2(float2(ceil(c.x), ceil(c.y)));
+    float2 d0 = float2(floor(c.x), floor(c.y)) - c;
+    float2 d1 = float2(ceil(c.x), floor(c.y)) - c;
+    float2 d2 = float2(floor(c.x), ceil(c.y)) - c;
+    float2 d3 = float2(ceil(c.x), ceil(c.y)) - c;
+    float v[4] = {dot(g0,d0),dot(g1,d1),dot(g2,d2),dot(g3,d3)};
+    return biquinticInterpolation(v, float2(c.x - floor(c.x), c.y - floor(c.y)));
 }
 
 // Returns the value of a 3D Perlin noise function at the given coordinates c

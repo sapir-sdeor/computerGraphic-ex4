@@ -52,10 +52,9 @@ Shader "CG/Bricks"
                 {
                     v2f output;
                     output.pos = UnityObjectToClipPos(input.vertex);
-                    output.normal = normalize(mul(input.normal, unity_WorldToObject).xyz);
+                    output.normal = input.normal;
                     output.worldPos = mul(input.vertex, unity_WorldToObject);
-                    output.tangent = mul(input.tangent, unity_WorldToObject);
-                   // output.tangent = input.tangent;
+                    output.tangent = input.tangent;
                     output.uv = input.uv;
                     return output;
                 }
@@ -80,7 +79,6 @@ Shader "CG/Bricks"
                     fixed4 spectular = tex2D(_SpecularMap, input.uv);
                     fixed4 blinnP = fixed4(blinnPhong(n,h,l,_Shininess,albedo,spectular,_Ambient), 0);
                     return blinnP;
-;
                 }
 
             ENDCG

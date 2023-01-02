@@ -43,18 +43,50 @@
                 struct v2f
                 {
                     float4 pos : SV_POSITION;
+                    float2 uv  : TEXCOORD0;
+                    float4 worldPos: TEXCOORD1;
+                    float3 normal   : NORMAL;
                 };
 
                 v2f vert (appdata input)
                 {
                     v2f output;
                     output.pos = UnityObjectToClipPos(input.vertex);
+                    output.uv = getSphericalUV(input.vertex);
+                    output.worldPos = mul(input.vertex, unity_WorldToObject);
+                    output.normal = normalize(input.vertex);
                     return output;
+                }
+
+
+                bumpMapData createBumpMesh(float3 n, float2 uv){
+                    bumpMapData bumpMesh;
+                    bumpMesh.normal = n;
+                    bumpMesh.tangent = cross(n, float3(0,1,0)); 
+                    bumpMesh.uv = uv;
+                    bumpMesh.heightMap = _HeightMap;
+                    bumpMesh.du = _HeightMap_TexelSize.x;
+                    bumpMesh.dv = _HeightMap_TexelSize.y;
+                    bumpMesh.bumpScale = _BumpScale/10000;
+                    return bumpMesh;
                 }
 
                 fixed4 frag (v2f input) : SV_Target
                 {
-                    return 1;
+                    float3 n = normalize(input.normal);
+                    bumpMapData bumpMesh = createBumpMesh(n, input.uv);
+                    float3 bumpMappedNormal = getBumpMappedNormal(bumpMesh);
+                    fixed4 spectular = tex2D(_SpecularMap, input.uv);
+                    float3 finalNormal = ((1 - spectular) * bumpMappedNormal) + (spectular * n);
+                    float3 l = normalize(_WorldSpaceLightPos0.xyz);
+                    float3 v = normalize(_WorldSpaceCameraPos - input.worldPos.xyz);
+                    float3 h = normalize(l + v);
+                    fixed4 albedo = tex2D(_AlbedoMap, input.uv);
+                    float lambert = max(0,dot(n,l));
+                    fixed4 atmosphere = (1-max(0,dot(n,v))) * sqrt(lambert) *_AtmosphereColor;
+                    fixed4 clouds = tex2D(_CloudMap, input.uv) * (sqrt(lambert) + _Ambient);
+                    fixed4 blinnP = fixed4(blinnPhong(n,h,l,_Shininess,albedo,spectular,_Ambient), 0);
+                    return blinnP + atmosphere + clouds ;
                 }
 
             ENDCG
