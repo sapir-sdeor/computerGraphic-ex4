@@ -1,4 +1,7 @@
-﻿#ifndef CG_UTILS_INCLUDED
+﻿// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
+// Upgrade NOTE: replaced '_World2Object' with 'unity_WorldToObject'
+
+#ifndef CG_UTILS_INCLUDED
 #define CG_UTILS_INCLUDED
 
 #define PI 3.141592653
@@ -41,15 +44,18 @@ fixed3 blinnPhong(float3 n, float3 v, float3 l, float shininess, fixed4 albedo, 
 float3 getBumpMappedNormal(bumpMapData i)
 {
     float fTagV = (tex2D(i.heightMap, i.uv+i.dv) - tex2D(i.heightMap, i.uv))/i.dv;
+    float fTagU = (tex2D(i.heightMap, i.uv+i.du) - tex2D(i.heightMap, i.uv))/i.du;
     float3 tv = float3(0,1,fTagV);
-    float3 beforeBumpScale = cross(tv,i.tangent);
-    float3 nh = UnityObjectToWorldDir
-            (normalize(float3(beforeBumpScale.x * i.bumpScale, beforeBumpScale.y * i.bumpScale, beforeBumpScale.z)));
-    i.normal = UnityObjectToWorldDir(i.normal);
-    i.tangent = UnityObjectToWorldDir(i.tangent);
-    float3 b = cross(i.normal, i.tangent);
+    float3 tu = float3(1,0,fTagU);
+    float3 beforeBumpScale = cross(tv,tu);
+    float3 nh = (normalize(float3(beforeBumpScale.x * i.bumpScale, beforeBumpScale.y * i.bumpScale, 1)));
+
+    i.normal = normalize(mul(i.normal, unity_WorldToObject));
+    i.tangent =  normalize(mul(i.tangent, unity_WorldToObject));
+    float3 b = normalize(cross(i.normal ,i.tangent));
+
     float3 nWorld = (i.tangent * nh.x) + (i.normal * nh.z) + (b * nh.y);
-    return nWorld.xyz;
+    return nWorld;
 }
 
 

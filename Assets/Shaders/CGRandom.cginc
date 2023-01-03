@@ -57,7 +57,7 @@ float bicubicInterpolation(float v[4], float2 t)
 // at the given ratio t (a float2 with components between 0 and 1)
 float biquinticInterpolation(float v[4], float2 t)
 {
-    float2 u = 6.0 * pow(t,5) - 15.0 * pow(t,4) + 10.0 * pow(t,3); // Cubic interpolation
+    float2 u = 6.0 * pow(t,5) - 15.0 * pow(t,4) + 10.0 * pow(t,3); // biquintic interpolation
 
     // Interpolate in the x direction
     float x1 = lerp(v[0], v[1], u.x);
@@ -71,7 +71,6 @@ float biquinticInterpolation(float v[4], float2 t)
 // at the given ratio t (a float3 with components between 0 and 1)
 float triquinticInterpolation(float v[8], float3 t)
 {
-    // Your implementation
     return 0;
 }
 
@@ -93,10 +92,10 @@ float perlin2d(float2 c)
     float2 g1 = random2(float2(ceil(c.x), floor(c.y)));
     float2 g2 = random2(float2(floor(c.x), ceil(c.y)));
     float2 g3 = random2(float2(ceil(c.x), ceil(c.y)));
-    float2 d0 = float2(floor(c.x), floor(c.y)) - c;
-    float2 d1 = float2(ceil(c.x), floor(c.y)) - c;
-    float2 d2 = float2(floor(c.x), ceil(c.y)) - c;
-    float2 d3 = float2(ceil(c.x), ceil(c.y)) - c;
+    float2 d0 = c - float2(floor(c.x), floor(c.y));
+    float2 d1 = c - float2(ceil(c.x), floor(c.y));
+    float2 d2 = c - float2(floor(c.x), ceil(c.y));
+    float2 d3 = c - float2(ceil(c.x), ceil(c.y));
     float v[4] = {dot(g0,d0),dot(g1,d1),dot(g2,d2),dot(g3,d3)};
     return biquinticInterpolation(v, float2(c.x - floor(c.x), c.y - floor(c.y)));
 }
