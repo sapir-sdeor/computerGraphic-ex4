@@ -78,9 +78,9 @@ float triquinticInterpolation(float v[8], float3 t)
 float value2d(float2 c)
 {
     float p0 = random2(float2(floor(c.x), floor(c.y))).x;
-    float p1 = random2(float2(ceil(c.x), floor(c.y))).x;
-    float p2 = random2(float2(floor(c.x), ceil(c.y))).x;
-    float p3 = random2(float2(ceil(c.x), ceil(c.y))).x;
+    float p1 = random2(float2(floor(c.x)+1, floor(c.y))).x;
+    float p2 = random2(float2(floor(c.x), floor(c.y)+1)).x;
+    float p3 = random2(float2(floor(c.x)+1, floor(c.y)+1)).x;
     float v[4] = {p0,p1,p2,p3};
     return bicubicInterpolation(v, float2(c.x - floor(c.x), c.y - floor(c.y)));
 }
@@ -89,13 +89,13 @@ float value2d(float2 c)
 float perlin2d(float2 c)
 {
     float2 g0 = random2(float2(floor(c.x), floor(c.y)));
-    float2 g1 = random2(float2(ceil(c.x), floor(c.y)));
-    float2 g2 = random2(float2(floor(c.x), ceil(c.y)));
-    float2 g3 = random2(float2(ceil(c.x), ceil(c.y)));
+    float2 g1 = random2(float2(floor(c.x)+1, floor(c.y)));
+    float2 g2 = random2(float2(floor(c.x), floor(c.y)+1));
+    float2 g3 = random2(float2(floor(c.x)+1, floor(c.y)+1));
     float2 d0 = c - float2(floor(c.x), floor(c.y));
-    float2 d1 = c - float2(ceil(c.x), floor(c.y));
-    float2 d2 = c - float2(floor(c.x), ceil(c.y));
-    float2 d3 = c - float2(ceil(c.x), ceil(c.y));
+    float2 d1 = c - float2(floor(c.x)+1, floor(c.y));
+    float2 d2 = c - float2(floor(c.x), floor(c.y)+1);
+    float2 d3 = c - float2(floor(c.x)+1, floor(c.y)+1);
     float v[4] = {dot(g0,d0),dot(g1,d1),dot(g2,d2),dot(g3,d3)};
     return biquinticInterpolation(v, float2(c.x - floor(c.x), c.y - floor(c.y)));
 }
