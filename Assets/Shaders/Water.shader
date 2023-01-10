@@ -50,29 +50,25 @@
                     return perlin2d(uv);
                 }
 
+
                 // Returns the world-space bump-mapped normal for the given bumpMapData and time t
                 float3 getWaterBumpMappedNormal(bumpMapData i, float t)
                 {
-                    float fTagV = (waterNoise(i.uv+i.dv,t)  - waterNoise(i.uv,t))/i.dv;
-                    float fTagU = (waterNoise(i.uv+i.du,t)  - waterNoise(i.uv,t))/i.du;
-                    float3 tv = float3(0,1,fTagV);
-                    float3 tu = float3(1,0,fTagU);
-                    float3 beforeBumpScale = cross(tv,tu);
-                    float3 nh = UnityObjectToWorldDir
-                            (normalize(float3(beforeBumpScale.x * i.bumpScale, beforeBumpScale.y * i.bumpScale, 1)));
-                    i.normal = UnityObjectToWorldDir(i.normal);
-                    i.tangent = UnityObjectToWorldDir(i.tangent);
-                    float3 b = cross(i.normal, i.tangent);
-                    float3 nWorld = (i.tangent * nh.x) + (i.normal * nh.z) + (b * nh.y);
-                    return nWorld.xyz;
-                    return 0;
+                    float noise = waterNoise(i.uv, t);
+                    float fTagU = (waterNoise(i.uv + float2(i.du, 0), t)  - noise) / i.du;
+                    float fTagV = (waterNoise(i.uv + float2(0, i.dv), t)  - noise) / i.dv;
+                    float s = i.bumpScale;
+                    float3 nh = normalize(float3(-s * fTagU, -s * fTagV, 1));
+                    float3 b = normalize(cross(i.tangent, i.normal));
+                    float3 nWorld = normalize((i.tangent * nh.x) + (i.normal * nh.z) + (b * nh.y));
+                    return nWorld;
                 }
 
                 
-                bumpMapData createBumpMesh(float3 n, float2 uv, float3 tangent){
+                bumpMapData createBumpMesh(float3 n, float2 uv, float4 tangent){
                     bumpMapData bumpMesh;
-                    bumpMesh.normal = n;
-                    bumpMesh.tangent = tangent; 
+                    bumpMesh.normal = normalize(n);
+                    bumpMesh.tangent = normalize(tangent); 
                     bumpMesh.uv = uv;
                     bumpMesh.du = DELTA;
                     bumpMesh.dv = DELTA;
@@ -80,28 +76,42 @@
                     return bumpMesh;
                 }
 
+                // v2f vert (appdata input)
+                // {
+                //     v2f output;
+                //     input.normal = normalize(input.normal);
+                //     input.vertex += float4(input.normal * waterNoise(input.uv * _NoiseScale, 0) * _BumpScale,0);
+                //     output.pos = UnityObjectToClipPos(input.vertex);
+                //     output.uv = input.uv;
+                //     output.normal = input.normal;
+                //     output.tangent = input.tangent;
+                //     output.worldPos = mul(input.vertex, unity_ObjectToWorld);
+                //     return output;
+                // }
+
                 v2f vert (appdata input)
                 {
                     v2f output;
                     input.normal = normalize(input.normal);
-                    input.vertex += float4(input.normal * waterNoise(input.uv * _NoiseScale, 0) * _BumpScale,0);
-                    output.pos = UnityObjectToClipPos(input.vertex);
+                    float4 newPos = input.vertex + float4(input.normal * waterNoise(input.uv * _NoiseScale, 0) * _BumpScale,0);
+                    output.pos = UnityObjectToClipPos(newPos);
                     output.uv = input.uv;
-                    output.normal = input.normal;
-                    output.tangent = input.tangent;
-                    output.worldPos = mul(input.vertex, unity_WorldToObject);
+                    output.normal = normalize(input.normal);
+                    output.tangent = normalize(input.tangent);
+                    output.worldPos = mul(input.vertex, unity_ObjectToWorld);
                     return output;
                 }
 
+
                 fixed4 frag (v2f input) : SV_Target
                 {
-                    float3 n = normalize(input.normal);
-                    bumpMapData bumpMesh = createBumpMesh(n,input.uv, input.tangent);
-                    float3 bumpMappedNormal = getWaterBumpMappedNormal(bumpMesh, 0);
+                    bumpMapData bumpMesh = createBumpMesh(input.normal ,input.uv, input.tangent);
+                    float3 n = getWaterBumpMappedNormal(bumpMesh, 0);
                     float3 v = normalize(_WorldSpaceCameraPos - input.worldPos.xyz);
-                    float3 r = 2*(dot(v,n)*n)-v;
+                    float3 r = (2*(dot(v,n)*n))-v;
+                    // float3 r = reflect(v, n);
                     fixed4 reflectedColor = texCUBE(_CubeMap, r);
-                    fixed4 color = (1-max(0,dot(bumpMappedNormal,v)) + 0.2) * reflectedColor;
+                    fixed4 color = (1-max(0,dot(n,v)) + 0.2) * reflectedColor;
                     return color;
                 }
 

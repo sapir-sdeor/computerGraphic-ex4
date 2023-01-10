@@ -52,32 +52,34 @@ Shader "CG/Bricks"
                 {
                     v2f output;
                     output.pos = UnityObjectToClipPos(input.vertex);
-                    output.normal = input.normal;
-                    output.worldPos = mul(input.vertex, unity_WorldToObject);
-                    output.tangent = input.tangent;
+                    output.worldPos = mul(input.vertex, unity_ObjectToWorld);
+                    output.normal = normalize(input.normal);
+                    output.tangent = normalize(input.tangent);
                     output.uv = input.uv;
                     return output;
                 }
 
-                fixed4 frag (v2f input) : SV_Target
-                {
-                    
-                    float3 normalDirection = normalize(input.normal);
+                bumpMapData createBumpMesh(float3 normal, float4 tangent, float2 uv){
                     bumpMapData bumpMesh;
-                    bumpMesh.normal = normalDirection;
-                    bumpMesh.tangent = input.tangent; 
-                    bumpMesh.uv = input.uv;
+                    bumpMesh.normal = normal;
+                    bumpMesh.tangent = tangent; 
+                    bumpMesh.uv = uv;
                     bumpMesh.heightMap = _HeightMap;
                     bumpMesh.du = _HeightMap_TexelSize.x;
                     bumpMesh.dv = _HeightMap_TexelSize.y;
-                    bumpMesh.bumpScale = _BumpScale/10000;
+                    bumpMesh.bumpScale = _BumpScale / 10000;
+                    return bumpMesh;
+                }
+
+                fixed4 frag (v2f input) : SV_Target
+                {
+                    bumpMapData bumpMesh = createBumpMesh(input.normal, input.tangent, input.uv);
                     float3 n = getBumpMappedNormal(bumpMesh);
-                    float3 l = normalize(_WorldSpaceLightPos0.xyz);
                     float3 v = normalize(_WorldSpaceCameraPos - input.worldPos.xyz);
-                    float3 h = normalize(l + v);
+                    float3 l = _WorldSpaceLightPos0.xyz;
                     fixed4 albedo = tex2D(_AlbedoMap, input.uv);
                     fixed4 spectular = tex2D(_SpecularMap, input.uv);
-                    fixed4 blinnP = fixed4(blinnPhong(n,h,l,_Shininess,albedo,spectular,_Ambient), 0);
+                    fixed4 blinnP = fixed4(blinnPhong(n,v,l,_Shininess,albedo,spectular,_Ambient), 1);
                     return blinnP;
                 }
 

@@ -33,28 +33,23 @@ float2 getSphericalUV(float3 pos)
 // Implements an adjusted version of the Blinn-Phong lighting model
 fixed3 blinnPhong(float3 n, float3 v, float3 l, float shininess, fixed4 albedo, fixed4 specularity, float ambientIntensity)
 {
-    //TODO: check if v or h
+    float3 h = normalize(l + v);
     fixed4 ambient = ambientIntensity * albedo;
     fixed4 diffuse = max(0, dot(n,l)) * albedo;
-    fixed4 specular = pow(max(0, dot(n,v)), shininess) * specularity;
+    fixed4 specular = pow(max(0, dot(n, h)), shininess) * specularity;
     return ambient + diffuse + specular;
 }
 
 // Returns the world-space bump-mapped normal for the given bumpMapData
 float3 getBumpMappedNormal(bumpMapData i)
 {
-    float fTagV = (tex2D(i.heightMap, i.uv+i.dv) - tex2D(i.heightMap, i.uv))/i.dv;
-    float fTagU = (tex2D(i.heightMap, i.uv+i.du) - tex2D(i.heightMap, i.uv))/i.du;
-    float3 tv = float3(0,1,fTagV);
-    float3 tu = float3(1,0,fTagU);
-    float3 beforeBumpScale = cross(tv,tu);
-    float3 nh = (normalize(float3(beforeBumpScale.x * i.bumpScale, beforeBumpScale.y * i.bumpScale, 1)));
-
-    i.normal = normalize(mul(i.normal, unity_WorldToObject));
-    i.tangent =  normalize(mul(i.tangent, unity_WorldToObject));
-    float3 b = normalize(cross(i.normal ,i.tangent));
-
-    float3 nWorld = (i.tangent * nh.x) + (i.normal * nh.z) + (b * nh.y);
+    float height = tex2D(i.heightMap, i.uv);
+    float fTagU = (tex2D(i.heightMap, i.uv + float2(i.du, 0)) - height) / i.du;
+    float fTagV = (tex2D(i.heightMap, i.uv + float2(0, i.dv)) - height) / i.dv;
+    float s = i.bumpScale;
+    float3 nh = normalize(float3(-s * fTagU, -s * fTagV, 1));
+    float3 b = normalize(cross(i.tangent, i.normal));
+    float3 nWorld = normalize((i.tangent * nh.x) + (i.normal * nh.z) + (b * nh.y));
     return nWorld;
 }
 
