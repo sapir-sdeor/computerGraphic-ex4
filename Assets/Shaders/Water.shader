@@ -92,22 +92,42 @@
                 v2f vert (appdata input)
                 {
                     v2f output;
-                    input.normal = normalize(input.normal);
+                    //todo: understand how to move the vertices
+                    
+                    float noise = waterNoise(input.uv * _NoiseScale, 0);
                     float4 newPos = input.vertex + float4(input.normal * waterNoise(input.uv * _NoiseScale, 0) * _BumpScale,0);
+                    // float4 newPos = input.vertex + float4(0, noise * _BumpScale , 0, 0);
                     output.pos = UnityObjectToClipPos(newPos);
                     output.uv = input.uv;
-                    output.normal = normalize(input.normal);
-                    output.tangent = normalize(input.tangent);
-                    output.worldPos = mul(input.vertex, unity_ObjectToWorld);
+                    output.normal = input.normal;
+                    output.tangent = input.tangent;
+                    output.worldPos = mul(newPos, unity_ObjectToWorld);
                     return output;
                 }
 
 
+                // fixed4 frag (v2f input) : SV_Target
+                // {
+                //     bumpMapData bumpMesh = createBumpMesh(input.normal ,input.uv, input.tangent);
+                //     // float3 n = getWaterBumpMappedNormal(bumpMesh, 0);
+                //     float3 n = normalize(input.normal);
+                //     float3 v = normalize(_WorldSpaceCameraPos - input.worldPos.xyz);
+                //     float3 r = (2*(dot(v,n)*n))-v;
+                //     // float3 r = reflect(v, n);
+                //     fixed4 reflectedColor = texCUBE(_CubeMap, r);
+                //     fixed4 color = (1-max(0,dot(n,v)) + 0.2) * reflectedColor;
+                //     return color;
+                // }
+
                 fixed4 frag (v2f input) : SV_Target
                 {
+                    float noise = 0.5 * waterNoise(input.uv * _NoiseScale, 0) + 0.5;
+
                     bumpMapData bumpMesh = createBumpMesh(input.normal ,input.uv, input.tangent);
-                    float3 n = getWaterBumpMappedNormal(bumpMesh, 0);
-                    float3 v = normalize(_WorldSpaceCameraPos - input.worldPos.xyz);
+                    // float3 n = getWaterBumpMappedNormal(bumpMesh, 0);
+                    float3 n = normalize(input.normal);
+                    //todo: understand v
+                    float3 v = normalize(_WorldSpaceCameraPos - input.worldPos.xyz) ;
                     float3 r = (2*(dot(v,n)*n))-v;
                     // float3 r = reflect(v, n);
                     fixed4 reflectedColor = texCUBE(_CubeMap, r);

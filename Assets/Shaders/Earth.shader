@@ -54,7 +54,6 @@
                     output.pos = UnityObjectToClipPos(input.vertex);
                     output.uv = getSphericalUV(input.vertex);
                     output.worldPos = mul(input.vertex, unity_ObjectToWorld);
-                    // dont seem right
                     output.normal = normalize(input.vertex);
                     return output;
                 }
@@ -63,7 +62,7 @@
                 bumpMapData createBumpMesh(float3 n, float2 uv){
                     bumpMapData bumpMesh;
                     bumpMesh.normal = n;
-                    bumpMesh.tangent = cross(n, float3(0,1,0)); 
+                    bumpMesh.tangent = normalize(cross(n, float3(0,1,0))); 
                     bumpMesh.uv = uv;
                     bumpMesh.heightMap = _HeightMap;
                     bumpMesh.du = _HeightMap_TexelSize.x;

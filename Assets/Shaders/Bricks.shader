@@ -53,8 +53,8 @@ Shader "CG/Bricks"
                     v2f output;
                     output.pos = UnityObjectToClipPos(input.vertex);
                     output.worldPos = mul(input.vertex, unity_ObjectToWorld);
-                    output.normal = normalize(input.normal);
-                    output.tangent = normalize(input.tangent);
+                    output.normal = input.normal;
+                    output.tangent = input.tangent;
                     output.uv = input.uv;
                     return output;
                 }
@@ -73,7 +73,7 @@ Shader "CG/Bricks"
 
                 fixed4 frag (v2f input) : SV_Target
                 {
-                    bumpMapData bumpMesh = createBumpMesh(input.normal, input.tangent, input.uv);
+                    bumpMapData bumpMesh = createBumpMesh(normalize(input.normal), normalize(input.tangent), input.uv);
                     float3 n = getBumpMappedNormal(bumpMesh);
                     float3 v = normalize(_WorldSpaceCameraPos - input.worldPos.xyz);
                     float3 l = _WorldSpaceLightPos0.xyz;
