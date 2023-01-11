@@ -67,8 +67,8 @@
                 
                 bumpMapData createBumpMesh(float3 n, float2 uv, float4 tangent){
                     bumpMapData bumpMesh;
-                    bumpMesh.normal = normalize(n);
-                    bumpMesh.tangent = normalize(tangent); 
+                    bumpMesh.normal = n;
+                    bumpMesh.tangent = tangent; 
                     bumpMesh.uv = uv;
                     bumpMesh.du = DELTA;
                     bumpMesh.dv = DELTA;
@@ -94,13 +94,13 @@
                     v2f output;
                     //todo: understand how to move the vertices
                     
-                    float noise = waterNoise(input.uv * _NoiseScale, 0);
+                   // float noise = waterNoise(input.uv * _NoiseScale, 0);
                     float4 newPos = input.vertex + float4(input.normal * waterNoise(input.uv * _NoiseScale, 0) * _BumpScale,0);
                     // float4 newPos = input.vertex + float4(0, noise * _BumpScale , 0, 0);
                     output.pos = UnityObjectToClipPos(newPos);
                     output.uv = input.uv;
-                    output.normal = input.normal;
-                    output.tangent = input.tangent;
+                    output.normal = mul(input.normal, unity_ObjectToWorld);
+                    output.tangent = mul(input.tangent, unity_ObjectToWorld);
                     output.worldPos = mul(newPos, unity_ObjectToWorld);
                     return output;
                 }
@@ -121,10 +121,10 @@
 
                 fixed4 frag (v2f input) : SV_Target
                 {
-                    float noise = 0.5 * waterNoise(input.uv * _NoiseScale, 0) + 0.5;
+                   // float noise = 0.5 * waterNoise(input.uv * _NoiseScale, 0) + 0.5;
 
-                    bumpMapData bumpMesh = createBumpMesh(input.normal ,input.uv, input.tangent);
-                    // float3 n = getWaterBumpMappedNormal(bumpMesh, 0);
+                    bumpMapData bumpMesh = createBumpMesh(normalize(input.normal) ,input.uv, input.tangent);
+                   // float3 n = getWaterBumpMappedNormal(bumpMesh, 0);
                     float3 n = normalize(input.normal);
                     //todo: understand v
                     float3 v = normalize(_WorldSpaceCameraPos - input.worldPos.xyz) ;
