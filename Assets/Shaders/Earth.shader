@@ -53,7 +53,7 @@
                     v2f output;
                     output.pos = UnityObjectToClipPos(input.vertex);
                     output.uv = getSphericalUV(input.vertex);
-                    output.worldPos = mul(input.vertex, unity_ObjectToWorld);
+                    output.worldPos = mul(unity_ObjectToWorld, input.vertex);
                     output.normal = normalize(input.vertex);
                     return output;
                 }

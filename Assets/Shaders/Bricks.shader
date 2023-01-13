@@ -52,7 +52,7 @@ Shader "CG/Bricks"
                 {
                     v2f output;
                     output.pos = UnityObjectToClipPos(input.vertex);
-                    output.worldPos = mul(input.vertex, unity_ObjectToWorld);
+                    output.worldPos = mul(unity_ObjectToWorld, input.vertex);
                     output.normal = input.normal;
                     output.tangent = input.tangent;
                     output.uv = input.uv;

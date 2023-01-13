@@ -71,7 +71,14 @@ float biquinticInterpolation(float v[4], float2 t)
 // at the given ratio t (a float3 with components between 0 and 1)
 float triquinticInterpolation(float v[8], float3 t)
 {
-    return 0;
+    float3 u = 6.0 * pow(t,5) - 15.0 * pow(t,4) + 10.0 * pow(t,3); // biquintic interpolation
+
+    float v1[4] = {v[0], v[1], v[2], v[3]};
+    float v2[4] = {v[4], v[5], v[6], v[7]};
+    float x1 = biquinticInterpolation(v1, float2(t.x, t.y));
+    float x2 = biquinticInterpolation(v2, float2(t.x, t.y));
+
+    return lerp(x1, x2, u.z);
 }
 
 // Returns the value of a 2D value noise function at the given coordinates c
@@ -103,8 +110,26 @@ float perlin2d(float2 c)
 // Returns the value of a 3D Perlin noise function at the given coordinates c
 float perlin3d(float3 c)
 {                    
-    // Your implementation
-    return 0;
+    float3 g0 = random3(float3(floor(c.x), floor(c.y), floor(c.z)));
+    float3 g1 = random3(float3(floor(c.x) + 1, floor(c.y), floor(c.z)));
+    float3 g2 = random3(float3(floor(c.x), floor(c.y) + 1, floor(c.z)));
+    float3 g3 = random3(float3(floor(c.x) + 1, floor(c.y) + 1, floor(c.z)));
+    float3 g4 = random3(float3(floor(c.x), floor(c.y), floor(c.z) + 1));
+    float3 g5 = random3(float3(floor(c.x) + 1, floor(c.y), floor(c.z) + 1));
+    float3 g6 = random3(float3(floor(c.x), floor(c.y) + 1, floor(c.z) + 1));
+    float3 g7 = random3(float3(floor(c.x) + 1, floor(c.y) + 1, floor(c.z) + 1));
+    
+    float3 d0 = c - float3(floor(c.x), floor(c.y), floor(c.z));
+    float3 d1 = c - float3(floor(c.x) + 1, floor(c.y), floor(c.z));
+    float3 d2 = c - float3(floor(c.x), floor(c.y) + 1, floor(c.z));
+    float3 d3 = c - float3(floor(c.x) + 1, floor(c.y) + 1, floor(c.z));
+    float3 d4 = c - float3(floor(c.x), floor(c.y), floor(c.z) + 1);
+    float3 d5 = c - float3(floor(c.x) + 1, floor(c.y), floor(c.z) + 1);
+    float3 d6 = c - float3(floor(c.x), floor(c.y) + 1, floor(c.z) + 1);
+    float3 d7 = c - float3(floor(c.x) + 1, floor(c.y) + 1, floor(c.z) + 1);
+ 
+    float v[8] = {dot(g0,d0),dot(g1,d1),dot(g2,d2),dot(g3,d3), dot(g4,d4),dot(g5,d5),dot(g6,d6),dot(g7,d7)};
+    return triquinticInterpolation(v, float3(c.x - floor(c.x), c.y - floor(c.y), c.z - floor(c.z)));
 }
 
 
