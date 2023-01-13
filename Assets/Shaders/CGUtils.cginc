@@ -30,6 +30,16 @@ float2 getSphericalUV(float3 pos)
     return uv;
 }
 
+// Receives pos in 3D cartesian coordinates (x, y, z) and height of the cylinder
+// Returns UV coordinates corresponding to pos using culinderical texture mapping
+float2 getCylindricalUV(float3 pos, float h)
+{
+    float r = sqrt(pow(pos.x,2) + pow(pos.y,2));
+    float teta = atan2(pos.z, pos.x);
+    float2 uv = float2(0.5 + teta/(2*UNITY_PI), pos.y/h);
+    return uv;
+}
+
 // Implements an adjusted version of the Blinn-Phong lighting model
 fixed3 blinnPhong(float3 n, float3 v, float3 l, float shininess, fixed4 albedo, fixed4 specularity, float ambientIntensity)
 {
